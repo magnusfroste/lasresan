@@ -1,0 +1,78 @@
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/800.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #faf7f2;
+  color: #14181f;
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+}
+
+::selection {
+  background: #f9cfe2;
+  color: #14181f;
+}
+
+/* Större träffytor och ingen dubbeltryck-zoom på iPad */
+button,
+a,
+input,
+textarea,
+select,
+summary {
+  touch-action: manipulation;
+}
+
+:focus-visible {
+  outline: 2px solid #d6367f;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex min-h-[52px] items-center justify-center gap-2 rounded-2xl px-5 py-3 text-[16px]
+      font-semibold transition select-none active:scale-[0.99] disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white shadow-sm hover:bg-brand-dark;
+  }
+  .btn-ghost {
+    @apply btn border border-line bg-white text-ink hover:border-brand/50;
+  }
+  .card {
+    @apply rounded-3xl border border-line bg-white p-5 shadow-[0_1px_2px_rgba(20,24,31,0.04)] sm:p-6;
+  }
+}
+
+.safe-bottom {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+}
+
+/* Lugn läsning: inga rörelser för den som bett om det */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
