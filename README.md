@@ -6,6 +6,8 @@ webbläsarens `localStorage`.
 
 **Spela:** https://lasresan.skolappar.com · En del av [Skolappar](https://www.skolappar.com) – pedagogiska appar av föräldrar · öppen källkod (MIT)
 
+![Läsresan](public/kort.png)
+
 Byggd med React + Vite + Tailwind, publicerad som statiska filer.
 
 ## Så fungerar det
