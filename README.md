@@ -50,8 +50,8 @@ rätt svar som finns bland alternativen.
 ## Integritet
 
 - Ingen inloggning, inga konton, inga kakor, ingen spårning.
-- Inga anrop till externa servrar. Typsnittet Fredoka ligger i appen (`public/fonts/`);
-  `@fontsource/inter` följer också med i bygget. Inga typsnitt hämtas utifrån.
+- Inga anrop till externa servrar. Typsnittet Fredoka ligger i appen (`public/fonts/`).
+  Inga typsnitt hämtas utifrån.
 - Enda lagringen: `localStorage` med nyckeln `lasresan-v1` (klara texter och antal rätt).
   Raderas den försvinner framstegen – inget skickas någonstans.
 
