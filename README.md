@@ -4,7 +4,9 @@ Gratis lästräning för åk 4–6: tolv korta texter i tre nivåer, med tre fr�
 Ingen inloggning, inga konton, inga kakor och inga externa nätverksanrop. Framstegen sparas bara i
 webbläsarens `localStorage`.
 
-Byggd med React + Vite + Tailwind, publicerad som statiska filer. Öppen källkod.
+**Spela:** https://lasresan.skolappar.com · En del av [Skolappar](https://www.skolappar.com) – pedagogiska appar av föräldrar · öppen källkod (MIT)
+
+Byggd med React + Vite + Tailwind, publicerad som statiska filer.
 
 ## Så fungerar det
 
@@ -30,7 +32,7 @@ npm run check    # innehållskontroll av texter och frågor
 npm run typecheck
 ```
 
-Node 20 eller senare.
+Dockerfilen bygger med Node 22.
 
 ## Innehåll
 
@@ -48,11 +50,12 @@ rätt svar som finns bland alternativen.
 ## Integritet
 
 - Ingen inloggning, inga konton, inga kakor, ingen spårning.
-- Inga anrop till externa servrar. Typsnittet Inter ligger i paketet (`@fontsource/inter`).
+- Inga anrop till externa servrar. Typsnittet Fredoka ligger i appen (`public/fonts/`);
+  `@fontsource/inter` följer också med i bygget. Inga typsnitt hämtas utifrån.
 - Enda lagringen: `localStorage` med nyckeln `lasresan-v1` (klara texter och antal rätt).
   Raderas den försvinner framstegen – inget skickas någonstans.
 
-## Deploy
+## Docker
 
 `Dockerfile` bygger appen och serverar `dist/` med nginx på port 8080 (`deploy/nginx.conf`).
 
@@ -61,6 +64,18 @@ docker build -t lasresan .
 docker run --rm -p 8080:8080 lasresan
 ```
 
+## Struktur
+
+```
+src/App.tsx              vyer: startsida och läsning
+src/components/Home.tsx  textval per nivå med framsteg
+src/components/Reader.tsx text, uppläsning, frågor och resultat
+src/lib/texts.ts         de tolv texterna med frågor
+src/lib/speech.ts        uppläsning med Web Speech API
+src/lib/progress.ts      framsteg i localStorage (lasresan-v1)
+scripts/verify-texts.mjs innehållskontroll
+```
+
 ## Licens
 
-Koden: MIT. Texterna: CC BY 4.0.
+Koden: MIT – se [LICENSE](LICENSE). Texterna: CC BY 4.0.
