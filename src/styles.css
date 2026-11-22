@@ -81,3 +81,23 @@ summary {
 html, body, button, input, select, textarea {
   font-family: 'Fredoka', 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
+
+
+/* ---- iPad landskap: textlistan rullar i egen ruta, sidan gör det inte --- */
+@media (min-width: 820px) and (max-height: 900px) {
+  main section[aria-label="Texter"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: calc(100dvh - 530px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 4px;
+  }
+  main section[aria-label="Texter"] > div:first-child,
+  main section[aria-label="Texter"] > p {
+    grid-column: 1 / -1;
+  }
+  main section[aria-label="Texter"] > button { padding: 14px 16px; border-radius: 18px; }
+  /* sidfoten tar 86 px som behövs till textlistan */
+  .mt-auto.border-t { display: none; }
+}
