@@ -9,6 +9,7 @@ import {
   type ReadingText,
 } from "../lib/texts";
 import { useSpeech } from "../lib/speech";
+import { report } from "../lib/skolappar";
 import type { TextResult } from "../lib/progress";
 import {
   ArrowLeftIcon,
@@ -414,6 +415,7 @@ export const Reader = ({
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>(() => text.questions.map(() => null));
   const finishedRef = useRef(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -421,6 +423,7 @@ export const Reader = ({
 
   const reset = useCallback(() => {
     finishedRef.current = false;
+    startedRef.current = false;
     setAnswers(text.questions.map(() => null));
     setIndex(0);
     setPhase("read");
@@ -443,12 +446,23 @@ export const Reader = ({
     if (!finishedRef.current) {
       finishedRef.current = true;
       onFinish(correct, text.questions.length);
+      report("round_done", Math.round((correct / text.questions.length) * 100));
     }
     setPhase("done");
   };
 
+  const startQuiz = () => {
+    // "Läs texten igen" mitt i frågorna leder hit också: räkna bara första gången.
+    if (!startedRef.current) {
+      startedRef.current = true;
+      report("round_start");
+      report("level", text.level);
+    }
+    setPhase("quiz");
+  };
+
   if (phase === "read")
-    return <ReadView text={text} result={result} onStart={() => setPhase("quiz")} onHome={onHome} />;
+    return <ReadView text={text} result={result} onStart={startQuiz} onHome={onHome} />;
 
   if (phase === "done")
     return (
