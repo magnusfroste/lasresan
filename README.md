@@ -4,7 +4,7 @@ Gratis lästräning för åk 4–6: tolv korta texter i tre nivåer, med tre fr�
 Ingen inloggning, inga konton, inga kakor och inga externa nätverksanrop. Framstegen sparas bara i
 webbläsarens `localStorage`.
 
-**Spela:** https://lasresan.skolappar.com · En del av [Skolappar](https://www.skolappar.com) – pedagogiska appar av föräldrar · öppen källkod (MIT)
+**Spela:** https://lasresan.skolappar.org · En del av [Skolappar](https://www.skolappar.org) – pedagogiska appar av föräldrar · öppen källkod (MIT)
 
 ![Läsresan](public/kort.png)
 

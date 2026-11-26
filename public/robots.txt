@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://lasresan.skolappar.com/sitemap.xml
+Sitemap: https://lasresan.skolappar.org/sitemap.xml
