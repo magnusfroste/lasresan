@@ -1,22 +1,19 @@
 /**
- * Uppläsning via webbläsarens egen Web Speech API (sv-SE).
- * Inga nätverksanrop, inga cookies – rösten finns i webbläsaren eller
- * operativsystemet. Saknas stödet visas ingen uppläsningsknapp.
+ * Uppläsning med inspelad röst (OmniVoice via Shipholms taltjänst).
+ *
+ * Allt som läses är text som finns först när appen körs – texter, valda ord
+ * och barnets egen läsning – så meningarna hämtas från tjänsten och spelas upp
+ * som ljud. Ingen talsyntes i webbläsaren används, varken som förstahandsval
+ * eller som reserv: svarar tjänsten inte blir det tyst, och texten står kvar
+ * på skärmen.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const TAL_URL = "https://api.shipholm.com/speak";
 
 export const isSpeechSupported = (): boolean =>
-  typeof window !== "undefined" &&
-  "speechSynthesis" in window &&
-  typeof window.SpeechSynthesisUtterance !== "undefined";
-
-const pickSwedishVoice = (voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined => {
-  const swedish = voices.filter((v) => v.lang?.toLowerCase().startsWith("sv"));
-  if (swedish.length === 0) return undefined;
-  // Föredra en röst som är markerad som standard, annars första svenska.
-  return swedish.find((v) => v.default) ?? swedish[0];
-};
+  typeof window !== "undefined" && typeof window.fetch === "function";
 
 /** Delar upp texten i meningar så att uppläsningen blir jämn och kan stoppas snabbt. */
 const splitSentences = (text: string): string[] => {
@@ -44,82 +41,86 @@ export type SpeechController = {
 };
 
 export const useSpeech = (): SpeechController => {
-  const supported = useMemo(isSpeechSupported, []);
+  const [supported] = useState(isSpeechSupported);
   const [speaking, setSpeaking] = useState(false);
-  const [voiceLabel, setVoiceLabel] = useState<string | null>(null);
-  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const stoppedRef = useRef(false);
+  const ljudRef = useRef<HTMLAudioElement | null>(null);
+  const urlRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (!supported) return;
-    const synth = window.speechSynthesis;
-
-    const loadVoices = () => {
-      voicesRef.current = synth.getVoices() ?? [];
-      const voice = pickSwedishVoice(voicesRef.current);
-      setVoiceLabel(voice ? voice.name : null);
-    };
-
-    loadVoices();
-    // Chrome fyller röstlistan först efter ett tag.
-    synth.addEventListener?.("voiceschanged", loadVoices);
-
-    return () => {
-      synth.removeEventListener?.("voiceschanged", loadVoices);
-      stoppedRef.current = true;
-      synth.cancel();
-    };
-  }, [supported]);
+  const rensa = useCallback(() => {
+    const ljud = ljudRef.current;
+    if (ljud) {
+      ljud.onended = null;
+      ljud.onerror = null;
+      ljud.pause();
+      ljudRef.current = null;
+    }
+    if (urlRef.current) {
+      URL.revokeObjectURL(urlRef.current);
+      urlRef.current = null;
+    }
+  }, []);
 
   const stop = useCallback(() => {
-    if (!supported) return;
     stoppedRef.current = true;
-    window.speechSynthesis.cancel();
+    rensa();
     setSpeaking(false);
-  }, [supported]);
+  }, [rensa]);
+
+  useEffect(() => () => stop(), [stop]);
 
   const toggle = useCallback(
     (text: string) => {
       if (!supported) return;
-      const synth = window.speechSynthesis;
       if (speaking) {
         stop();
         return;
       }
+      const meningar = splitSentences(text);
+      if (!meningar.length) return;
 
-      synth.cancel();
+      rensa();
       stoppedRef.current = false;
-      const voice = pickSwedishVoice(voicesRef.current.length ? voicesRef.current : synth.getVoices() ?? []);
-      const sentences = splitSentences(text);
-
-      sentences.forEach((sentence, i) => {
-        const utterance = new SpeechSynthesisUtterance(sentence);
-        utterance.lang = "sv-SE";
-        utterance.rate = 0.95;
-        utterance.pitch = 1;
-        if (voice) utterance.voice = voice;
-        if (i === sentences.length - 1) {
-          utterance.onend = () => {
-            if (!stoppedRef.current) setSpeaking(false);
-          };
-        }
-        utterance.onerror = () => {
-          if (!stoppedRef.current) setSpeaking(false);
-        };
-        synth.speak(utterance);
-      });
-
       setSpeaking(true);
 
-      // Säkerhetsnät: en del webbläsare saknar röst och spelar då aldrig upp.
-      // Då ska knappen inte fastna i "Stoppa uppläsning".
-      window.setTimeout(() => {
+      // En mening i taget: hämta, spela, fortsätt när den tagit slut.
+      const spela = (i: number) => {
         if (stoppedRef.current) return;
-        if (!synth.speaking && !synth.pending) setSpeaking(false);
-      }, 1600);
+        if (i >= meningar.length) {
+          setSpeaking(false);
+          return;
+        }
+        fetch(TAL_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: meningar[i], voice: "omni" }),
+        })
+          .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+          .then((b) => {
+            if (stoppedRef.current) return;
+            const url = URL.createObjectURL(b);
+            urlRef.current = url;
+            const ljud = new Audio(url);
+            ljudRef.current = ljud;
+            const nästa = () => {
+              URL.revokeObjectURL(url);
+              if (urlRef.current === url) urlRef.current = null;
+              spela(i + 1);
+            };
+            ljud.onended = nästa;
+            ljud.onerror = nästa;
+            return ljud.play().catch(nästa);
+          })
+          .catch(() => {
+            // Tyst: texten syns redan på skärmen.
+            if (!stoppedRef.current) setSpeaking(false);
+          });
+      };
+
+      spela(0);
     },
-    [speaking, stop, supported]
+    [rensa, speaking, stop, supported]
   );
 
-  return { supported, speaking, voiceLabel, toggle, stop };
+  return { supported, speaking, voiceLabel: "OmniVoice", toggle, stop };
 };
